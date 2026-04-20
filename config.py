@@ -1,0 +1,11 @@
+HOST = "localhost"
+PORT = 2000
+TIMEOUT = 5.0
+
+VEHICLE_BP = "vehicle.tesla.model3"
+
+TARGET_SPEED = 8.0
+WAYPOINT_REACH_DIST = 4.0
+IMAGE_W = 640
+IMAGE_H = 480
+CAMERA_FOV = 90
