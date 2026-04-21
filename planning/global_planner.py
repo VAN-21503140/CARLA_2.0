@@ -37,7 +37,7 @@ class CarlaGraphPlanner:
         self.graph = defaultdict(list)   # {node_id: [(neighbor_id, cost), ...]}
         self.nodes = {}                  # {node_id: waypoint}
         self._lane_index = defaultdict(list)
-
+        self._uturn_source_ids = set()
         self.build_graph()
 
     # =========================================================
@@ -48,6 +48,7 @@ class CarlaGraphPlanner:
         self.graph.clear()
         self.nodes.clear()
         self._lane_index.clear()
+        self._uturn_source_ids.clear()
         self.build_graph()
 
     def plan(self, start_location, goal_location):
@@ -104,6 +105,11 @@ class CarlaGraphPlanner:
                 wp_id = self._waypoint_id(wp)
                 self.nodes[wp_id] = wp
                 self._ensure_node(wp_id)
+
+            # 只把 exit_wp 记成允许发起 U-turn 的源点
+            exit_id = self._waypoint_id(exit_wp)
+            if exit_wp.is_junction:
+                self._uturn_source_ids.add(exit_id)
 
         # Step 2. 连接每条 sampled path 内部顺序边
         self._connect_sampled_paths(sampled_paths)
@@ -246,13 +252,16 @@ class CarlaGraphPlanner:
     # Step 6: junction 内掉头边
     # =========================================================
     def _connect_uturns(self):
-        for wp_id, wp in list(self.nodes.items()):
-            if not wp.is_junction:
+        for wp_id in self._uturn_source_ids:
+            wp = self.nodes.get(wp_id)
+            if wp is None:
                 continue
 
             uturn_target_id = self._find_junction_uturn_target(wp, max_dist=18.0)
             if uturn_target_id is not None and uturn_target_id != wp_id:
-                uturn_cost = self._waypoint_distance(wp, self.nodes[uturn_target_id]) * self.uturn_cost_factor
+                uturn_cost = self._waypoint_distance(
+                    wp, self.nodes[uturn_target_id]
+                ) * self.uturn_cost_factor
                 self._add_edge(wp_id, uturn_target_id, uturn_cost)
 
     # =========================================================
@@ -467,7 +476,7 @@ class CarlaGraphPlanner:
                 continue
 
             # 偏向对向车道
-            if wp.lane_id * cand.lane_id >= 0:
+            if wp.lane_id * cand.lane_id != -1:
                 continue
 
             d = src_loc.distance(cand.transform.location)
