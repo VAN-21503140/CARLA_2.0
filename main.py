@@ -32,6 +32,7 @@ def main():
 
     original_settings = world.get_settings()
     vehicle = None
+    camera_manager = None
 
     try:
         settings = world.get_settings()
@@ -39,15 +40,12 @@ def main():
         settings.fixed_delta_seconds = 0.05
         world.apply_settings(settings)
 
+        graph_path = "D:/carla_pjt/town_graph.json"
+
         planner = CarlaGraphPlanner(
             carla_map,
-            sampling_resolution=2.0,
-            lane_change_cost_factor=1.5,
-            uturn_cost_factor=5.0,
-            enable_lane_change=True,
-            enable_uturn=True,
+            graph_path=graph_path
         )
-
         print("Planner summary:", planner.debug_summary())
 
         spawn_points = carla_map.get_spawn_points()
