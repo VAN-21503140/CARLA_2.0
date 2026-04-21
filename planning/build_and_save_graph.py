@@ -11,7 +11,7 @@ def main():
     builder = CarlaGraphBuilder(
         carla_map=carla_map,
         sampling_resolution=2.0,
-        lane_change_cost_factor=1.5,
+        lane_change_cost_factor=3,
         uturn_cost_factor=5.0,
         enable_lane_change=True,
         enable_uturn=True,

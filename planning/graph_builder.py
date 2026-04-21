@@ -8,8 +8,8 @@ class CarlaGraphBuilder:
         self,
         carla_map,
         sampling_resolution=2.0,
-        lane_change_cost_factor=1.5,
-        uturn_cost_factor=5.0,
+        lane_change_cost_factor=1.2,
+        uturn_cost_factor=2.0,
         enable_lane_change=True,
         enable_uturn=True,
     ):
@@ -76,14 +76,17 @@ class CarlaGraphBuilder:
             "edges": []
         }
 
+        edge_id = 0
         for src_id, neighbors in self.graph.items():
             for dst_id, cost, edge_type in neighbors:
                 data["edges"].append({
+                    "id": edge_id,
                     "src": src_id,
                     "dst": dst_id,
                     "cost": cost,
                     "type": edge_type,
                 })
+                edge_id += 1
 
         with open(save_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -318,7 +321,7 @@ class CarlaGraphBuilder:
 
         return False
 
-    def _find_junction_uturn_target(self, wp, max_dist=18.0):
+    def _find_junction_uturn_target(self, wp, max_dist=7.0):
         if not wp.is_junction:
             return None
 
@@ -342,7 +345,7 @@ class CarlaGraphBuilder:
             if cand.road_id == wp.road_id and cand.lane_id == wp.lane_id:
                 continue
 
-            if wp.lane_id * cand.lane_id >=0:
+            if wp.lane_id * cand.lane_id !=-1:
                 continue
 
             d = src_loc.distance(cand.transform.location)
